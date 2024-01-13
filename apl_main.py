@@ -1,3 +1,6 @@
+# prueba_1 para cambios en el código principal
+
+
 
 # Importación del módulo logging, que proporciona funcionalidades de registro para mostrar mensajes informativos,
 # de advertencia o de error durante la ejecución del script. Ayuda a rastrear la actividad del programa.
