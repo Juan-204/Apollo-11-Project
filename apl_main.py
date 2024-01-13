@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 # Se utiliza específicamente la función sleep para introducir pausas en la ejecución del script, en este caso, para esperar 2 minutos.
 import time
 
-
+# juanjo 
 
 def generar_nombre_archivo():
     misiones = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo"]
