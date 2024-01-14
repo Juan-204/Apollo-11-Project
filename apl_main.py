@@ -1,5 +1,5 @@
 #este es un ejemplo de cambio
-
+#ejemplo 2 para cambios
 
 # Importación del módulo logging, que proporciona funcionalidades de registro para mostrar mensajes informativos,
 # de advertencia o de error durante la ejecución del script. Ayuda a rastrear la actividad del programa.
