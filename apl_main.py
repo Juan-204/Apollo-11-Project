@@ -1,6 +1,6 @@
 # prueba_1 para cambios en el código principal
 # prueba_2 para cambios en el código principal
-
+# prueba_3 juanjose para cambios en el codigo principal
 
 # Importación del módulo logging, que proporciona funcionalidades de registro para mostrar mensajes informativos,
 # de advertencia o de error durante la ejecución del script. Ayuda a rastrear la actividad del programa.
@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 # Se utiliza específicamente la función sleep para introducir pausas en la ejecución del script, en este caso, para esperar 2 minutos.
 import time
 
-
+# juanjo 
 
 def generar_nombre_archivo():
     misiones = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo"]
