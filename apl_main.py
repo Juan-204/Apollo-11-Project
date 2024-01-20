@@ -1,4 +1,6 @@
+import hashlib
 import logging
+from msilib.schema import Component
 
 import os
 
@@ -8,16 +10,16 @@ from datetime import datetime, timedelta
 
 import time
 
-def generate_file_names():
-    """ 
-    Generates file names for space missions.
-    Returns a string with the file name APL{idd}-0000{number_files}.log
-    The mission is selected randomly
-    """
-    missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo"]
-    idd = random.choice(missions)
-    number_files = random.randint(1, 1000)
-    return f"APL{idd}-0000{number_files}.log"
+# def generate_file_names():
+#     """ 
+#     Generates file names for space missions.
+#     Returns a string with the file name APL{idd}-0000{number_files}.log
+#     The mission is selected randomly
+#     """
+#     missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo"]
+#     idd = random.choice(missions)
+#     number_files = random.randint(1, 1000)
+#     return f"APL{idd}-0000{number_files}.log"
 
 
 def generate_content_files(idd):
@@ -30,11 +32,32 @@ def generate_content_files(idd):
     from the list states["excellent", "good", "warning", "faulty", "killed", "unknown"]
     """
     states = ["excellent", "good", "warning", "faulty", "killed", "unknown"]
+    components = ["satellites", "spacesships", "space suits", "space vehicles"]
     current_date = datetime.now().strftime("%d%m%y%H%M%S")
     device_status = random.choice(states)
-    content = f"""Fecha: {current_date} 
+    type_components = random.choice(components)
+    h = hashlib.md5()
+    h.update(current_date.encode('utf-8'))
+    h.update(idd.encode('utf-8'))
+    h.update(type_components.encode('utf-8'))
+    h.update(device_status.encode('utf-8'))
+    hash = h.hexdigest()
+    if idd == "APLUnknown" or device_status == "unknown":
+        content = f"""
+                Fecha: {current_date} 
                 IDD: {idd}
-                Estado del dispositivo: {device_status}"""
+                Tipo de dispositivo: "unknown"
+                Estado del dispositivo: "unknown"
+                Hash: "unknown"
+                """
+    else:
+        content = f"""
+                Fecha: {current_date} 
+                IDD: {idd}
+                Tipo de dispositivo: {type_components}
+                Estado del dispositivo: {device_status}
+                Hash: {hash}
+                """
     return content
 
 
@@ -70,7 +93,10 @@ def generate():
 
     file_to_generate = random.randint(1, 10)
     for _ in range(file_to_generate):
-        file_name = generate_file_names()
+        number_files = _ + 1
+        missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo" , "Unknown"]
+        idd = random.choice(missions)
+        file_name = f"APL{idd}-0000{number_files}.log"
         path_file = os.path.join(subfolder_name, file_name)
 
         try:
