@@ -80,7 +80,7 @@ class apl_main():
             
             generar()
 
-            # Se añade un comentario para explicar que se espera 2 minutos antes de la próxima generación de archivos.
+            # Se añade un comentario para explicar que se espera 20 segundos antes de la próxima generación de archivos.
             # Esto cumple con el requisito de generar archivos cada 2 minutos.
             time.sleep(20)
 
