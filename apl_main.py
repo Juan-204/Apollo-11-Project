@@ -10,26 +10,18 @@ from datetime import datetime, timedelta
 
 import time
 
-# def generate_file_names():
-#     """ 
-#     Generates file names for space missions.
-#     Returns a string with the file name APL{idd}-0000{number_files}.log
-#     The mission is selected randomly
-#     """
-#     missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo"]
-#     idd = random.choice(missions)
-#     number_files = random.randint(1, 1000)
-#     return f"APL{idd}-0000{number_files}.log"
-
-
 def generate_content_files(idd):
     """
-    Generates content for device state files.
-    Args idd: string as device identifier
-    Returns str: a string containing information about the state of the device,
-    including the current date,device identifier (IDD) and device status.
-    The status is randomly chosen 
-    from the list states["excellent", "good", "warning", "faulty", "killed", "unknown"]
+    Genera contenido para archivos de estado del dispositivo.
+    Args idd: cadena como identificador de dispositivo
+    Devuelve str: una cadena que contiene información sobre el estado del dispositivo,
+    incluyendo la fecha actual, el identificador del dispositivo (IDD) y el estado del dispositivo.
+    El estado se elige al azar.
+    de la lista dice ["excelente", "bueno", "advertencia", "defectuoso", "muerto", "desconocido"]
+    el codigo hash es de tipo md5 se genero a partir de la fecha actual, el idd, el tipo de componente
+    y el estado del componente
+    validacion para el estado y el idd unknown para que cuando se detecte sea marcado como desconocido
+    en las areas del tipo, el estado y el hash
     """
     states = ["excellent", "good", "warning", "faulty", "killed", "unknown"]
     components = ["satellites", "spacesships", "space suits", "space vehicles"]
@@ -61,13 +53,13 @@ def generate_content_files(idd):
     return content
 
 
-def Synchronization():
+def synchronization():
     """
-    This function create a folder named 'devices' in the current director
-    If the folder is created successfully, it logs an information message.
-    If the folder already exists, it logs a warning message.
-    If any other exception occurs during the folder creation
-    it logs a warning message with the error details.
+        Esta función crea una carpeta llamada 'dispositivos' en el director actual
+        Si la carpeta se crea correctamente, registra un mensaje de información.
+        Si la carpeta ya existe, registra un mensaje de advertencia.
+        Si ocurre alguna otra excepción durante la creación de la carpeta
+        registra un mensaje de advertencia con los detalles del error.
     """
     folder_name = "devices"
     try:
@@ -81,10 +73,12 @@ def Synchronization():
         
 def generate():
     """
-    Generates files and folders in the 'devices' directory.
-    This function creates a subfolder with a name based on the current date and time
-    inside the 'devices' directory. It then generates between 1 and 10 files every 2 minutes,
-    each containing information about the device status.
+    Genera archivos y carpetas en el directorio 'dispositivos'.
+    Esta función crea una subcarpeta con un nombre basado en la fecha y hora actuales.
+    dentro del directorio 'dispositivos'. Luego genera entre 1 y 10 archivos cada 2 minutos,
+    cada uno contiene información sobre el estado del dispositivo.
+    cada lote de archivos esta marcado de 1 al numero maximo de archivos escogidos aleatoriamente
+    en cada lote el contador se reinicia para realizar la misma operacion
     """
     folder_name = "devices"
     current_date = datetime.now().strftime("%d%m%y%H%M%S")
@@ -109,20 +103,21 @@ def generate():
 
 
 class apl_main():
-    """A class called apl_main is defined, which encapsulates the main method of the program.
-    The @staticmethod decorator indicates that this method can be called on the class without
-    creating an instance of it.
+    """
+    Se define una clase llamada apl_main, que encapsula el método principal del programa.
+    El decorador @staticmethod indica que este método se puede llamar en la clase sin
+    creando una instancia del mismo.
     """
 
     @staticmethod
     def main():
         """
-        Initiates the main program loop.
-        The main loop continuously calls the 'Synchronization' function to create the 'devices' folder
-        and generate files according to specified requirements. It then calls the 'generate' function
-        to create files within the 'devices' folder. After each iteration, the loop waits for 20 seconds
+        Inicia el ciclo principal del programa.
+        El bucle principal llama continuamente a la función 'Sincronización' para crear la carpeta 'dispositivos'
+        y generar archivos de acuerdo con los requisitos especificados. Luego llama a la función 'generar'.
+        para crear archivos dentro de la carpeta 'dispositivos'. Después de cada iteración, el bucle espera 20 segundos.
         """
-        Synchronization()
+        synchronization()
         
         while True:
             
@@ -132,9 +127,9 @@ class apl_main():
 
 if __name__ == "__main__":
     """
-    configures the logging system to display messages of INFO level or higher.
-    This provides information about the execution of the script, such as success messages or warnings.
-    The static main() method of the apl_main class is called to start the program execution.
+    configura el sistema de registro para mostrar mensajes de nivel INFO o superior.
+    Esto proporciona información sobre la ejecución del script, como mensajes de éxito o advertencias.
+    Se llama al método estático main() de la clase apl_main para iniciar la ejecución del programa.
     """
     logging.basicConfig(level=logging.INFO)
 
