@@ -1,21 +1,25 @@
 import hashlib
+
 import logging
-from msilib.schema import Component
 
 import os
 
 import random
 
+import time
+
 from datetime import datetime, timedelta
 
-import time
+from msilib.schema import Component
+
 
 def generate_content_files(idd):
     """
     Genera contenido para archivos de estado del dispositivo.
     Args idd: cadena como identificador de dispositivo
     Devuelve str: una cadena que contiene información sobre el estado del dispositivo,
-    incluyendo la fecha actual, el identificador del dispositivo (IDD) y el estado del dispositivo.
+    incluyendo la fecha actual, el identificador del dispositivo (IDD)
+    y el estado del dispositivo.
     El estado se elige al azar.
     de la lista dice ["excelente", "bueno", "advertencia", "defectuoso", "muerto", "desconocido"]
     el codigo hash es de tipo md5 se genero a partir de la fecha actual, el idd, el tipo de componente
@@ -34,9 +38,10 @@ def generate_content_files(idd):
     h.update(type_components.encode('utf-8'))
     h.update(device_status.encode('utf-8'))
     hash = h.hexdigest()
+
     if idd == "APLUnknown" or device_status == "unknown":
         content = f"""
-                Fecha: {current_date} 
+                Fecha: {current_date}
                 IDD: {idd}
                 Tipo de dispositivo: "unknown"
                 Estado del dispositivo: "unknown"
@@ -55,11 +60,11 @@ def generate_content_files(idd):
 
 def synchronization():
     """
-        Esta función crea una carpeta llamada 'dispositivos' en el director actual
-        Si la carpeta se crea correctamente, registra un mensaje de información.
-        Si la carpeta ya existe, registra un mensaje de advertencia.
-        Si ocurre alguna otra excepción durante la creación de la carpeta
-        registra un mensaje de advertencia con los detalles del error.
+    Esta función crea una carpeta llamada 'dispositivos' en el director actual
+    Si la carpeta se crea correctamente, registra un mensaje de información.
+    Si la carpeta ya existe, registra un mensaje de advertencia.
+    Si ocurre alguna otra excepción durante la creación de la carpeta
+    registra un mensaje de advertencia con los detalles del error.
     """
     folder_name = "devices"
     try:
@@ -70,7 +75,7 @@ def synchronization():
     except Exception as e:
         logging.warning("Error al crear la carpeta: {}".format(e))
 
-        
+
 def generate():
     """
     Genera archivos y carpetas en el directorio 'dispositivos'.
@@ -88,7 +93,8 @@ def generate():
     file_to_generate = random.randint(1, 10)
     for _ in range(file_to_generate):
         number_files = _ + 1
-        missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo" , "Unknown"]
+        missions = ["OrbitOne", "ColonyMoon", "VacMars",
+                    "GalaxyTwo", "Unknown"]
         idd = random.choice(missions)
         file_name = f"APL{idd}-0000{number_files}.log"
         path_file = os.path.join(subfolder_name, file_name)
@@ -102,7 +108,7 @@ def generate():
             logging.warning("Error al crear el archivo {}: {}".format(file_name, e))
 
 
-class apl_main():
+class AplMain():
     """
     Se define una clase llamada apl_main, que encapsula el método principal del programa.
     El decorador @staticmethod indica que este método se puede llamar en la clase sin
@@ -118,12 +124,13 @@ class apl_main():
         para crear archivos dentro de la carpeta 'dispositivos'. Después de cada iteración, el bucle espera 20 segundos.
         """
         synchronization()
-        
+
         while True:
-            
+
             generate()
 
             time.sleep(20)
+
 
 if __name__ == "__main__":
     """
@@ -133,4 +140,4 @@ if __name__ == "__main__":
     """
     logging.basicConfig(level=logging.INFO)
 
-    apl_main.main()
+    AplMain.main()
