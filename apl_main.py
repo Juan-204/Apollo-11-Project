@@ -1,4 +1,5 @@
 import hashlib
+
 import logging
 from msilib.schema import Component
 
@@ -6,9 +7,17 @@ import os
 
 import random
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import time
+
+import glob
+
+import re
+
+folder_name = "devices"
+current_date = datetime.now().strftime("%d%m%y%H%M%S")
+subfolder_name = os.path.join(folder_name, current_date)
 
 def generate_content_files(idd):
     """
@@ -53,15 +62,14 @@ def generate_content_files(idd):
     return content
 
 
-def synchronization():
+def synchronization(folder_name):
     """
-        Esta función crea una carpeta llamada 'dispositivos' en el director actual
-        Si la carpeta se crea correctamente, registra un mensaje de información.
-        Si la carpeta ya existe, registra un mensaje de advertencia.
-        Si ocurre alguna otra excepción durante la creación de la carpeta
-        registra un mensaje de advertencia con los detalles del error.
+    Esta función crea una carpeta llamada 'dispositivos' en el director 
+    actual Si la carpeta se crea correctamente, registra un mensaje de información.
+    Si la carpeta ya existe, registra un mensaje de advertencia.
+    Si ocurre alguna otra excepción durante la creación de la carpeta
+    registra un mensaje de advertencia con los detalles del error.
     """
-    folder_name = "devices"
     try:
         os.mkdir(folder_name)
         logging.info("Carpeta {} creada con éxito".format(folder_name))
@@ -70,8 +78,41 @@ def synchronization():
     except Exception as e:
         logging.warning("Error al crear la carpeta: {}".format(e))
 
+def file_analysis(subfolder_name,current_date):
+    extension = os.path.join(subfolder_name, '*.log')
+    archive_log = glob.glob(extension, recursive=True)
+    report = {}
+    
+    for archive_path in archive_log:
+        try:
+            with open(archive_path, 'r') as archive_file:
+                content = archive_file.read()
+                match_idd = re.search(r'IDD: (\w+)', content)
+                match_tipe_components = re.search(r'Tipo de dispositivo: (\w+)', content)
+                match_state_component = re.search(r'Estado del dispositivo: (\w+)', content)
+                if match_idd and match_tipe_components and match_state_component:
+                    idd = match_idd.group(1)
+                    tipe_components = match_tipe_components.group(1)
+                    state_components = match_state_component.group(1)
+                    if idd not in report:
+                        report[idd] = {tipe_components: {states: 0 for states in ["excellent", "good", "warning", "faulty", "killed", "unknown"]}}
+                    elif tipe_components not in report[idd]:
+                        report[idd][tipe_components] = {states: 0 for states in ["excellent", "good", "warning", "faulty", "killed", "unknown"]}
+                    report[idd][tipe_components][state_components] += 1
+        except Exception as e:
+            print(f"Error al leer el archivo {archive_path}: {e}")
+    report_name = f"APLSTATS-REPORT-{current_date}.log"
+    path_file = os.path.join(subfolder_name, report_name)
+    
+    with open(path_file, 'w') as report_file:
+        for idd, components in report.items():
+            report_file.write(f"Misión: {idd}\n")
+            for tipe, state in components.items():
+                report_file.write(f"\tTipo de dispositivo: {tipe}\n")
+                for states_2, count in state.items():
+                    report_file.write(f"\t\tEstado '{states_2}': {count}\n")
         
-def generate():
+def generate(folder_name):
     """
     Genera archivos y carpetas en el directorio 'dispositivos'.
     Esta función crea una subcarpeta con un nombre basado en la fecha y hora actuales.
@@ -80,7 +121,6 @@ def generate():
     cada lote de archivos esta marcado de 1 al numero maximo de archivos escogidos aleatoriamente
     en cada lote el contador se reinicia para realizar la misma operacion
     """
-    folder_name = "devices"
     current_date = datetime.now().strftime("%d%m%y%H%M%S")
     subfolder_name = os.path.join(folder_name, current_date)
     os.mkdir(subfolder_name)
@@ -98,8 +138,10 @@ def generate():
                 content = generate_content_files(file_name.split('-')[0])
                 archive.write(content)
             logging.info("Archivo {} creado con éxito".format(file_name))
+            file_analysis(subfolder_name, current_date)
         except Exception as e:
             logging.warning("Error al crear el archivo {}: {}".format(file_name, e))
+            
 
 
 class apl_main():
@@ -112,17 +154,17 @@ class apl_main():
     @staticmethod
     def main():
         """
+        antes de iniciar el ciclo principal se llama a la funcion "synchronization" para crear la carpeta dispositivos
+        si ya no esta creada previamente
         Inicia el ciclo principal del programa.
-        El bucle principal llama continuamente a la función 'Sincronización' para crear la carpeta 'dispositivos'
-        y generar archivos de acuerdo con los requisitos especificados. Luego llama a la función 'generar'.
+        se llama a la funcion "generar" en el ciclo infinito
         para crear archivos dentro de la carpeta 'dispositivos'. Después de cada iteración, el bucle espera 20 segundos.
         """
-        synchronization()
+        synchronization(folder_name)
         
         while True:
             
-            generate()
-
+            generate(folder_name)
             time.sleep(20)
 
 if __name__ == "__main__":
