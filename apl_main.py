@@ -14,6 +14,7 @@ import re
 
 import time
 
+
 folder_name = "devices"
 current_date = datetime.now().strftime("%d%m%y%H%M%S")
 subfolder_name = os.path.join(folder_name, current_date)
@@ -35,31 +36,27 @@ def generate_content_files(idd):
     states = ["excellent", "good", "warning", "faulty", "killed", "unknown"]
     components = ["satellites", "spacesships", "space suits", "space vehicles"]
     current_date = datetime.now().strftime("%d%m%y%H%M%S")
-    device_status = random.choice(states)
-    type_components = random.choice(components)
-    h = hashlib.md5()
-    h.update(current_date.encode('utf-8'))
-    h.update(idd.encode('utf-8'))
-    h.update(type_components.encode('utf-8'))
-    h.update(device_status.encode('utf-8'))
-    hash = h.hexdigest()
-
-    if idd == "APLUnknown" or device_status == "unknown":
-        content = f"""
-                Fecha: {current_date}
-                IDD: {idd}
-                Tipo de dispositivo: "unknown"
-                Estado del dispositivo: "unknown"
-                Hash: "unknown"
-                """
+    if idd.lower() == "aplunknown":
+        type_components = "unknown"
+        device_status = "unknown" 
+        hash_value = "unknown"
     else:
-        content = f"""
-                Fecha: {current_date} 
-                IDD: {idd}
-                Tipo de dispositivo: {type_components}
-                Estado del dispositivo: {device_status}
-                Hash: {hash}
-                """
+        device_status = random.choice(states)
+        type_components = random.choice(components)
+        h = hashlib.md5()
+        h.update(current_date.encode('utf-8'))
+        h.update(idd.encode('utf-8'))
+        h.update(type_components.encode('utf-8'))
+        h.update(device_status.encode('utf-8'))
+        hash_value = h.hexdigest()
+    
+    content = f"""
+            Fecha: {current_date} 
+            IDD: {idd}
+            Tipo de dispositivo: {type_components}
+            Estado del dispositivo: {device_status}
+            Hash: {hash_value}
+            """
     return content
 
 
@@ -82,7 +79,10 @@ def synchronization(folder_name):
 def file_analysis(subfolder_name,current_date):
     """
     analizis de los archivos .log que contiene la informacion de las misiones para generar un archivo con la informacion
-    condensada
+    condensada, primero se itera sobre las subcarpetas en la carpeta devices para poder encontrar los archivos con la
+    extension, luego por medio de expresiones regulares extraemos la informacion y todo lo condensamos en un diccionario de
+    diccionarios para posteriormente establecer contadores para que agregen las ocurrencias encontradas, todo esto se escribe en
+    un archivo APLSTATS-REPORT con la fecha actual para que la informacion de cada lote de archivos sea mas legible y global
     Args:
         subfolder_name (_str_): contiene la ruta de las subcarpetas dentro de la carpeta raiz
         current_date (_str_): contiene la fecha actual del sistema
@@ -91,6 +91,7 @@ def file_analysis(subfolder_name,current_date):
     extension = os.path.join(subfolder_name, '*.log')
     archive_log = glob.glob(extension, recursive=True)
     report = {}
+    count_unk = 0
     
     for archive_path in archive_log:
         try:
@@ -99,10 +100,18 @@ def file_analysis(subfolder_name,current_date):
                 match_idd = re.search(r'IDD: (\w+)', content)
                 match_tipe_components = re.search(r'Tipo de dispositivo: (\w+)', content)
                 match_state_component = re.search(r'Estado del dispositivo: (\w+)', content)
+                match_unknown = re.search(r'IDD: (APLUnknown)', content)
+                if match_unknown:
+                        idd = match_unknown.group(1)
+                        if idd == "APLUnknown":
+                            count_unk += 1
+                
                 if match_idd and match_tipe_components and match_state_component:
+                    
                     idd = match_idd.group(1)
                     tipe_components = match_tipe_components.group(1)
                     state_components = match_state_component.group(1)
+                    
                     if idd not in report:
                         report[idd] = {tipe_components: {states: 0 for states in ["excellent", "good", "warning", "faulty", "killed", "unknown"]}}
                     elif tipe_components not in report[idd]:
@@ -112,8 +121,8 @@ def file_analysis(subfolder_name,current_date):
             print(f"Error al leer el archivo {archive_path}: {e}")
     report_name = f"APLSTATS-REPORT-{current_date}.log"
     path_file = os.path.join(subfolder_name, report_name)
-    
     with open(path_file, 'w') as report_file:
+        report_file.write("La cantidad de misiones marcadas como Desconocidas son: {}\n".format(count_unk))
         for idd, components in report.items():
             report_file.write(f"Misión: {idd}\n")
             for tipe, state in components.items():
@@ -137,8 +146,7 @@ def generate(folder_name):
     file_to_generate = random.randint(1, 10)
     for _ in range(file_to_generate):
         number_files = _ + 1
-        missions = ["OrbitOne", "ColonyMoon", "VacMars",
-                    "GalaxyTwo", "Unknown"]
+        missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo", "Unknown"]
         idd = random.choice(missions)
         file_name = f"APL{idd}-0000{number_files}.log"
         path_file = os.path.join(subfolder_name, file_name)
@@ -175,7 +183,7 @@ class AplMain():
         while True:
             
             generate(folder_name)
-            time.sleep(20)
+            time.sleep(10)
 
 
 if __name__ == "__main__":
