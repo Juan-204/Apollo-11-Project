@@ -79,6 +79,14 @@ def synchronization(folder_name):
         logging.warning("Error al crear la carpeta: {}".format(e))
 
 def file_analysis(subfolder_name,current_date):
+    """
+    analizis de los archivos .log que contiene la informacion de las misiones para generar un archivo con la informacion
+    condensada
+    Args:
+        subfolder_name (_str_): contiene la ruta de las subcarpetas dentro de la carpeta raiz
+        current_date (_str_): contiene la fecha actual del sistema
+    """
+    
     extension = os.path.join(subfolder_name, '*.log')
     archive_log = glob.glob(extension, recursive=True)
     report = {}
