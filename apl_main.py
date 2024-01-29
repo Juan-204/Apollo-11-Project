@@ -8,6 +8,8 @@ import random
 
 from datetime import datetime
 
+from typing import List, Tuple, Dict, Any, Union
+
 import glob
 
 import re
@@ -16,14 +18,14 @@ import shutil
 import time
 
 
-folder_name = "devices"
-folder_backup = "backup"
-current_date = datetime.now().strftime("%d%m%y%H%M%S")
-current_route = os.getcwd()
-subfolder_name = os.path.join(folder_name, current_date)
+folder_name: str = "devices"
+folder_backup: str = "backup"
+current_date: str = datetime.now().strftime("%d%m%y%H%M%S")
+current_route: str = os.getcwd()
+subfolder_name: str = os.path.join(folder_name, current_date)
 
 
-def generate_content_files(idd):
+def generate_content_files(idd: str) ->str:
     """
     Genera contenido para archivos de estado del dispositivo.
     Args idd: cadena como identificador de dispositivo
@@ -37,13 +39,13 @@ def generate_content_files(idd):
     validacion para el idd unknown para que cuando se detecte sea marcado como desconocido
     en las areas del tipo, el estado y el hash
     """
-    states = ["excellent", "good", "warning", "faulty", "killed", "unknown"]
-    components = ["satellites", "spacesships", "space suits", "space vehicles"]
-    current_date = datetime.now().strftime("%d%m%y%H%M%S")
+    states: List[str] = ["excellent", "good", "warning", "faulty", "killed", "unknown"]
+    components: List[str] = ["satellites", "spacesships", "space suits", "space vehicles"]
+    current_date: str = datetime.now().strftime("%d%m%y%H%M%S")
     if idd.lower() == "aplunknown":
-        type_components = "unknown"
-        device_status = "unknown"
-        hash_value = "unknown"
+        type_components: str = "unknown"
+        device_status: str = "unknown"
+        hash_value: str = "unknown"
     else:
         device_status = random.choice(states)
         type_components = random.choice(components)
@@ -64,7 +66,7 @@ def generate_content_files(idd):
     return content
 
 
-def synchronization(folder_name, folder_backup):
+def synchronization(folder_name: str, folder_backup: str) -> None:
     """
     Esta función crea una carpeta llamada 'dispositivos' en el director actual
     Si la carpeta se crea correctamente, registra un mensaje de información.
@@ -84,7 +86,7 @@ def synchronization(folder_name, folder_backup):
         logging.warning("Error al crear la carpeta: {}".format(e))
 
 
-def file_analysis(folder_name, current_date):
+def file_analysis(folder_name: str, current_date: str) -> str:
     """
     analizis de los archivos .log que contiene la informacion de las misiones
     para generar un archivo con la informacion condensada, primero se itera
@@ -100,29 +102,29 @@ def file_analysis(folder_name, current_date):
         current_date (_str_): contiene la fecha actual del sistema
     """
 
-    extension = os.path.join(folder_name, '**', '*.log')
-    archive_log = glob.glob(extension, recursive=True)
+    extension: str = os.path.join(folder_name, '**', '*.log')
+    archive_log: List[str] = glob.glob(extension, recursive=True)
     report = {}
-    count_unk = 0
+    count_unk: int = 0
 
     for archive_path in archive_log:
         try:
             with open(archive_path, 'r') as archive_file:
-                content = archive_file.read()
+                content: str = archive_file.read()
                 match_idd = re.search(r'IDD: (\w+)', content)
                 match_tipe_components = re.search(r'Tipo de dispositivo: (\w+)', content)
                 match_state_component = re.search(r'Estado del dispositivo: (\w+)', content)
                 match_unknown = re.search(r'IDD: (APLUnknown)', content)
 
                 if match_unknown:
-                    idd = match_unknown.group(1)
+                    idd: str = match_unknown.group(1)
                     if idd == "APLUnknown":
                         count_unk += 1
 
                 if match_idd and match_tipe_components and match_state_component:
                     idd = match_idd.group(1)
-                    tipe_components = match_tipe_components.group(1)
-                    state_components = match_state_component.group(1)
+                    tipe_components: str = match_tipe_components.group(1)
+                    state_components: str = match_state_component.group(1)
                     if idd not in report:
                         report[idd] = {tipe_components: {states: 0 for states in [
                             "excellent", "good", "warning", "faulty", "killed", "unknown"]}}
@@ -133,20 +135,20 @@ def file_analysis(folder_name, current_date):
         except Exception as e:
             print(f"Error al leer el archivo {archive_path}: {e}")
 
-    total_unknown_counts = {}
+    total_unknown_counts: Dict[str, int] = {}
     for idd, components in report.items():
-        total_unknown_count = 0
+        total_unknown_count: int = 0
         for component_states in components.values():
             total_unknown_count += component_states.get("unknown", 0)
         total_unknown_counts[idd] = total_unknown_count
 
-    report_name = f"APLSTATS-REPORT-{current_date}.log"
-    path_file = os.path.join(folder_name, report_name)
+    report_name: str = f"APLSTATS-REPORT-{current_date}.log"
+    path_file: str = os.path.join(folder_name, report_name)
     with open(path_file, 'w') as report_file:
         report_file.write("La cantidad de misiones que no se encuentran en el registro son: {}\n".format(count_unk))
         report_file.write("\nMisiones con Mayor Cantidad de Estados Desconocidos:\n")
         if total_unknown_counts:
-            ranking_unknown = sorted(total_unknown_counts.items(), key=lambda x: x[1], reverse=True)
+            ranking_unknown: List[Tuple[str, int]] = sorted(total_unknown_counts.items(), key=lambda x: x[1], reverse=True)
             for mission, unknown_count in ranking_unknown:
                 report_file.write(f"\tMisión: {mission}, Cantidad de 'unknown': {unknown_count}\n")
         else:
@@ -162,15 +164,15 @@ def file_analysis(folder_name, current_date):
     return report_name
 
 
-def move_backup(report, current, folder_name, backup):
+def move_backup(report: str, current: str, folder_name: str, backup: str) -> None:
 
-    extension = os.path.join(current, folder_name)
-    extension = os.path.abspath(extension)
+    extension: str = os.path.join(current, folder_name)
+    extension: str = os.path.abspath(extension)
 
-    now_route = os.path.join(current, folder_name)
-    move_route = os.path.join(current, backup)
+    now_route: str = os.path.join(current, folder_name)
+    move_route: str = os.path.join(current, backup)
 
-    get_files = os.listdir(extension)
+    get_files: List[str] = os.listdir(extension)
 
     print(get_files)
 
@@ -183,7 +185,7 @@ def move_backup(report, current, folder_name, backup):
         logging.info("los archivos fueron analizados y movidos con exito")
 
 
-def generate(folder_name):
+def generate(folder_name: str) -> None:
     """
     Genera archivos y carpetas en el directorio 'dispositivos'.
     Esta función crea una subcarpeta con un nombre basado en la fecha y hora actuales.
@@ -192,21 +194,21 @@ def generate(folder_name):
     cada lote de archivos esta marcado de 1 al numero maximo de archivos escogidos aleatoriamente
     en cada lote el contador se reinicia para realizar la misma operacion
     """
-    current_date = datetime.now().strftime("%d%m%y%H%M%S")
-    subfolder_name = os.path.join(folder_name, current_date)
+    current_date: str = datetime.now().strftime("%d%m%y%H%M%S")
+    subfolder_name: str = os.path.join(folder_name, current_date)
     os.mkdir(subfolder_name)
 
-    file_to_generate = random.randint(1, 10)
+    file_to_generate: int = random.randint(1, 10)
     for _ in range(file_to_generate):
-        number_files = _ + 1
-        missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo", "Unknown"]
-        idd = random.choice(missions)
-        file_name = f"APL{idd}-0000{number_files}.log"
-        path_file = os.path.join(subfolder_name, file_name)
+        number_files: int = _ + 1
+        missions: List[str] = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo", "Unknown"]
+        idd: str = random.choice(missions)
+        file_name: str = f"APL{idd}-0000{number_files}.log"
+        path_file: str = os.path.join(subfolder_name, file_name)
 
         try:
             with open(path_file, 'w') as archive:
-                content = generate_content_files(file_name.split('-')[0])
+                content: str = generate_content_files(file_name.split('-')[0])
                 archive.write(content)
             logging.info("Archivo {} creado con éxito".format(file_name))
         except Exception as e:
