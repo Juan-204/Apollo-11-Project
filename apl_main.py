@@ -1,4 +1,3 @@
-
 import hashlib
 
 import logging
@@ -12,12 +11,15 @@ from datetime import datetime
 import glob
 
 import re
+import shutil
 
 import time
 
 
 folder_name = "devices"
+folder_backup = "backup"
 current_date = datetime.now().strftime("%d%m%y%H%M%S")
+current_route = os.getcwd()
 subfolder_name = os.path.join(folder_name, current_date)
 
 
@@ -62,7 +64,7 @@ def generate_content_files(idd):
     return content
 
 
-def synchronization(folder_name):
+def synchronization(folder_name, folder_backup):
     """
     Esta función crea una carpeta llamada 'dispositivos' en el director actual
     Si la carpeta se crea correctamente, registra un mensaje de información.
@@ -72,14 +74,17 @@ def synchronization(folder_name):
     """
     try:
         os.mkdir(folder_name)
+        os.mkdir(folder_backup)
         logging.info("Carpeta {} creada con éxito".format(folder_name))
+        logging.info("Carpeta {} creada con éxito".format(folder_backup))
     except FileExistsError:
         logging.warning("La carpeta {} ya existe".format(folder_name))
+        logging.warning("La carpeta {} ya existe".format(folder_backup))
     except Exception as e:
         logging.warning("Error al crear la carpeta: {}".format(e))
 
 
-def file_analysis(subfolder_name, current_date):
+def file_analysis(folder_name, current_date):
     """
     analizis de los archivos .log que contiene la informacion de las misiones
     para generar un archivo con la informacion condensada, primero se itera
@@ -95,11 +100,10 @@ def file_analysis(subfolder_name, current_date):
         current_date (_str_): contiene la fecha actual del sistema
     """
 
-    extension = os.path.join(subfolder_name, '*.log')
+    extension = os.path.join(folder_name, '**', '*.log')
     archive_log = glob.glob(extension, recursive=True)
     report = {}
     count_unk = 0
-    unknown_counts = {}
 
     for archive_path in archive_log:
         try:
@@ -129,29 +133,54 @@ def file_analysis(subfolder_name, current_date):
         except Exception as e:
             print(f"Error al leer el archivo {archive_path}: {e}")
 
+    total_unknown_counts = {}
     for idd, components in report.items():
         total_unknown_count = 0
         for component_states in components.values():
             total_unknown_count += component_states.get("unknown", 0)
-        unknown_counts[idd] = total_unknown_count
+        total_unknown_counts[idd] = total_unknown_count
 
     report_name = f"APLSTATS-REPORT-{current_date}.log"
-    path_file = os.path.join(subfolder_name, report_name)
+    path_file = os.path.join(folder_name, report_name)
     with open(path_file, 'w') as report_file:
-        report_file.write("La cantidad de misiones que no se encuentran en el registro son: {}\n\n".format(count_unk))
-        for idd, components in report.items():
-            report_file.write(f"Misión: {idd}\n")
-            for tipe, state in components.items():
-                report_file.write(f"\tTipo de dispositivo: {tipe}\n")
-                for states_2, count in state.items():
-                    report_file.write(f"\t\tEstado '{states_2}': {count}\n")
+        report_file.write("La cantidad de misiones que no se encuentran en el registro son: {}\n".format(count_unk))
         report_file.write("\nMisiones con Mayor Cantidad de Estados Desconocidos:\n")
-        if unknown_counts:
-            ranking_unknown = sorted(unknown_counts.items(), key=lambda x: x[1], reverse=True)
+        if total_unknown_counts:
+            ranking_unknown = sorted(total_unknown_counts.items(), key=lambda x: x[1], reverse=True)
             for mission, unknown_count in ranking_unknown:
                 report_file.write(f"\tMisión: {mission}, Cantidad de 'unknown': {unknown_count}\n")
         else:
             report_file.write("\tNo hay misiones con estados 'unknown'.\n")
+
+        for idd, components in report.items():
+            report_file.write(f"\nMisión: {idd}\n")
+            for tipe, state in components.items():
+                report_file.write(f"\tTipo de dispositivo: {tipe}\n")
+                for states_2, count in state.items():
+                    report_file.write(f"\t\tEstado '{states_2}': {count}\n")
+
+    return report_name
+
+
+def move_backup(report, current, folder_name, backup):
+
+    extension = os.path.join(current, folder_name)
+    extension = os.path.abspath(extension)
+
+    now_route = os.path.join(current, folder_name)
+    move_route = os.path.join(current, backup)
+
+    get_files = os.listdir(extension)
+
+    print(get_files)
+
+    for archive in get_files:
+
+        if re.match(r"APLSTATS", archive):
+            logging.info(f"archivo ignorado con exito {report}")
+            continue
+        shutil.move(now_route + "\\" + archive, move_route)
+        logging.info("los archivos fueron analizados y movidos con exito")
 
 
 def generate(folder_name):
@@ -180,7 +209,6 @@ def generate(folder_name):
                 content = generate_content_files(file_name.split('-')[0])
                 archive.write(content)
             logging.info("Archivo {} creado con éxito".format(file_name))
-            file_analysis(subfolder_name, current_date)
         except Exception as e:
             logging.warning("Error al crear el archivo {}: {}".format(file_name, e))
 
@@ -201,12 +229,17 @@ class AplMain():
         se llama a la funcion "generar" en el ciclo infinito
         para crear archivos dentro de la carpeta 'dispositivos'. Después de cada iteración, el bucle espera 20 segundos.
         """
-        synchronization(folder_name)
+        try:
+            synchronization(folder_name, folder_backup)
 
-        while True:
+            while True:
 
-            generate(folder_name)
-            time.sleep(10)
+                generate(folder_name)
+                report = file_analysis(folder_name, current_date)
+
+                time.sleep(10)
+        except KeyboardInterrupt:
+            move_backup(report, current_route, folder_name, folder_backup)
 
 
 if __name__ == "__main__":
