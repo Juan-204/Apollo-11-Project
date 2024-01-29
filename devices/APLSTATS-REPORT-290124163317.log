@@ -1,0 +1,60 @@
+La cantidad de misiones que no se encuentran en el registro son: 1
+
+Misiones con Mayor Cantidad de Estados Desconocidos:
+	Misión: APLColonyMoon, Cantidad de 'unknown': 1
+	Misión: APLGalaxyTwo, Cantidad de 'unknown': 1
+	Misión: APLUnknown, Cantidad de 'unknown': 1
+	Misión: APLVacMars, Cantidad de 'unknown': 1
+	Misión: APLOrbitOne, Cantidad de 'unknown': 0
+
+Misión: APLColonyMoon
+	Tipo de dispositivo: spacesships
+		Estado 'excellent': 0
+		Estado 'good': 0
+		Estado 'warning': 0
+		Estado 'faulty': 0
+		Estado 'killed': 0
+		Estado 'unknown': 1
+
+Misión: APLGalaxyTwo
+	Tipo de dispositivo: spacesships
+		Estado 'excellent': 0
+		Estado 'good': 0
+		Estado 'warning': 0
+		Estado 'faulty': 0
+		Estado 'killed': 0
+		Estado 'unknown': 1
+
+Misión: APLOrbitOne
+	Tipo de dispositivo: space
+		Estado 'excellent': 0
+		Estado 'good': 1
+		Estado 'warning': 0
+		Estado 'faulty': 0
+		Estado 'killed': 0
+		Estado 'unknown': 0
+
+Misión: APLUnknown
+	Tipo de dispositivo: unknown
+		Estado 'excellent': 0
+		Estado 'good': 0
+		Estado 'warning': 0
+		Estado 'faulty': 0
+		Estado 'killed': 0
+		Estado 'unknown': 1
+
+Misión: APLVacMars
+	Tipo de dispositivo: space
+		Estado 'excellent': 2
+		Estado 'good': 0
+		Estado 'warning': 1
+		Estado 'faulty': 0
+		Estado 'killed': 0
+		Estado 'unknown': 0
+	Tipo de dispositivo: spacesships
+		Estado 'excellent': 0
+		Estado 'good': 0
+		Estado 'warning': 0
+		Estado 'faulty': 0
+		Estado 'killed': 0
+		Estado 'unknown': 1
