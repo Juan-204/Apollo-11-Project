@@ -1,4 +1,5 @@
 import hashlib
+from json import load
 
 import logging
 
@@ -11,13 +12,23 @@ from datetime import datetime
 import glob
 
 import re
+
 import shutil
 
 import time
 
+from decouple import Config
 
-folder_name = "devices"
-folder_backup = "backup"
+from dotenv import load_dotenv
+
+load_dotenv()
+
+config = Config('.env')
+folder_name = os.getenv('FOLDER_NAME', default='devices')
+folder_backup = config.get('FOLDER_BACKUP', default='backup')
+file_count_range_min = int(os.getenv('FILE_COUNT_RANGE_MIN', default=1))
+file_count_range_max = int(os.getenv('FILE_COUNT_RANGE_MAX', default=10))
+time_execution_iteration = int(os.getenv('TIME_EXECUTION', default=10))
 current_date = datetime.now().strftime("%d%m%y%H%M%S")
 current_route = os.getcwd()
 subfolder_name = os.path.join(folder_name, current_date)
@@ -110,8 +121,10 @@ def file_analysis(folder_name, current_date):
             with open(archive_path, 'r') as archive_file:
                 content = archive_file.read()
                 match_idd = re.search(r'IDD: (\w+)', content)
-                match_tipe_components = re.search(r'Tipo de dispositivo: (\w+)', content)
-                match_state_component = re.search(r'Estado del dispositivo: (\w+)', content)
+                match_tipe_components = re.search(
+                    r'Tipo de dispositivo: (\w+)', content)
+                match_state_component = re.search(
+                    r'Estado del dispositivo: (\w+)', content)
                 match_unknown = re.search(r'IDD: (APLUnknown)', content)
 
                 if match_unknown:
@@ -124,8 +137,15 @@ def file_analysis(folder_name, current_date):
                     tipe_components = match_tipe_components.group(1)
                     state_components = match_state_component.group(1)
                     if idd not in report:
-                        report[idd] = {tipe_components: {states: 0 for states in [
-                            "excellent", "good", "warning", "faulty", "killed", "unknown"]}}
+                        report[idd] = {
+                            tipe_components: {
+                                states: 0 for states in [
+                                    "excellent",
+                                    "good",
+                                    "warning",
+                                    "faulty",
+                                    "killed",
+                                    "unknown"]}}
                     elif tipe_components not in report[idd]:
                         report[idd][tipe_components] = {states: 0 for states in [
                             "excellent", "good", "warning", "faulty", "killed", "unknown"]}
@@ -143,12 +163,18 @@ def file_analysis(folder_name, current_date):
     report_name = f"APLSTATS-REPORT-{current_date}.log"
     path_file = os.path.join(folder_name, report_name)
     with open(path_file, 'w') as report_file:
-        report_file.write("La cantidad de misiones que no se encuentran en el registro son: {}\n".format(count_unk))
-        report_file.write("\nMisiones con Mayor Cantidad de Estados Desconocidos:\n")
+        report_file.write(
+            "La cantidad de misiones que no se encuentran en el registro son: {}\n".format(count_unk))
+        report_file.write(
+            "\nMisiones con Mayor Cantidad de Estados Desconocidos:\n")
         if total_unknown_counts:
-            ranking_unknown = sorted(total_unknown_counts.items(), key=lambda x: x[1], reverse=True)
+            ranking_unknown = sorted(
+                total_unknown_counts.items(),
+                key=lambda x: x[1],
+                reverse=True)
             for mission, unknown_count in ranking_unknown:
-                report_file.write(f"\tMisión: {mission}, Cantidad de 'unknown': {unknown_count}\n")
+                report_file.write(
+                    f"\tMisión: {mission}, Cantidad de 'unknown': {unknown_count}\n")
         else:
             report_file.write("\tNo hay misiones con estados 'unknown'.\n")
 
@@ -177,10 +203,11 @@ def move_backup(report, current, folder_name, backup):
     for archive in get_files:
 
         if re.match(r"APLSTATS", archive):
-            logging.info(f"archivo ignorado con exito {report}")
+            logging.info(f"\narchivo ignorado con exito {report}")
             continue
         shutil.move(now_route + "\\" + archive, move_route)
-        logging.info("los archivos fueron analizados y movidos con exito")
+        logging.info(f"\nlos archivos {
+            archive} fueron analizados y movidos con exito\n")
 
 
 def generate(folder_name):
@@ -196,10 +223,16 @@ def generate(folder_name):
     subfolder_name = os.path.join(folder_name, current_date)
     os.mkdir(subfolder_name)
 
-    file_to_generate = random.randint(1, 10)
+    file_to_generate = random.randint(
+        file_count_range_min, file_count_range_max)
     for _ in range(file_to_generate):
         number_files = _ + 1
-        missions = ["OrbitOne", "ColonyMoon", "VacMars", "GalaxyTwo", "Unknown"]
+        missions = [
+            "OrbitOne",
+            "ColonyMoon",
+            "VacMars",
+            "GalaxyTwo",
+            "Unknown"]
         idd = random.choice(missions)
         file_name = f"APL{idd}-0000{number_files}.log"
         path_file = os.path.join(subfolder_name, file_name)
@@ -210,7 +243,9 @@ def generate(folder_name):
                 archive.write(content)
             logging.info("Archivo {} creado con éxito".format(file_name))
         except Exception as e:
-            logging.warning("Error al crear el archivo {}: {}".format(file_name, e))
+            logging.warning(
+                "Error al crear el archivo {}: {}".format(
+                    file_name, e))
 
 
 class AplMain():
@@ -237,7 +272,7 @@ class AplMain():
                 generate(folder_name)
                 report = file_analysis(folder_name, current_date)
 
-                time.sleep(10)
+                time.sleep(time_execution_iteration)
         except KeyboardInterrupt:
             move_backup(report, current_route, folder_name, folder_backup)
 
