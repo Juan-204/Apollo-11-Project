@@ -39,7 +39,9 @@ subfolder_name = os.path.join(folder_name, current_date)
 def generate_content_files(idd: str) ->str:
     """
     Genera contenido para archivos de estado del dispositivo.
+    
     Args idd: cadena como identificador de dispositivo
+    
     Devuelve str: una cadena que contiene información sobre el estado del dispositivo,
     incluyendo la fecha actual, el identificador del dispositivo (IDD)
     y el estado del dispositivo.
@@ -84,7 +86,12 @@ def synchronization(folder_name: str, folder_backup: str) -> None:
     Si la carpeta ya existe, registra un mensaje de advertencia.
     Si ocurre alguna otra excepción durante la creación de la carpeta
     registra un mensaje de advertencia con los detalles del error.
+    
+    args: str folder_name: nombre de la carpeta devices
+    args: str folder_backup: nombre de la carpeta backup
+    
     """
+    
     try:
         os.mkdir(folder_name)
         os.mkdir(folder_backup)
@@ -191,7 +198,14 @@ def file_analysis(folder_name: str, current_date: str) -> str:
 
 
 def move_backup(report: str, current: str, folder_name: str, backup: str) -> None:
-
+    """
+    esta funcion se encargara de mover los archivos luego de analizarlos
+    Args:
+        report (str): recibe un nombre de reporte para poder ignorarlo y no sea movido
+        current (str): recibe la direccion actual donde esta el script
+        folder_name (str): nombre de la carpeta devices donde estan los archivos por mover
+        backup (str): nombre de la carpeta backups donde seran movidos los archivos
+    """
     extension: str = os.path.join(current, folder_name)
     extension: str = os.path.abspath(extension)
 
@@ -208,8 +222,7 @@ def move_backup(report: str, current: str, folder_name: str, backup: str) -> Non
             logging.info(f"\narchivo ignorado con exito {report}")
             continue
         shutil.move(now_route + "\\" + archive, move_route)
-        logging.info(f"\nlos archivos {
-            archive} fueron analizados y movidos con exito\n")
+        logging.info(f"\nlos archivos {archive} fueron analizados y movidos con exito\n")
 
 
 def generate(folder_name: str) -> None:
@@ -221,6 +234,7 @@ def generate(folder_name: str) -> None:
     cada lote de archivos esta marcado de 1 al numero maximo de archivos escogidos aleatoriamente
     en cada lote el contador se reinicia para realizar la misma operacion
     """
+
     current_date: str = datetime.now().strftime("%d%m%y%H%M%S")
     subfolder_name: str = os.path.join(folder_name, current_date)
     os.mkdir(subfolder_name)
