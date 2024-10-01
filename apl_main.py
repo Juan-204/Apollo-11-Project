@@ -284,11 +284,26 @@ class AplMain():
             synchronization(folder_name, folder_backup)
 
             while True:
-
                 generate(folder_name)
                 report = file_analysis(folder_name, current_date)
-
                 time.sleep(time_execution_iteration)
+                
+                carpetaOrigen = folder_name
+                carpetaDestino = folder_backup
+                
+                elemetos = os.listdir(carpetaOrigen)
+                archives = [f for f in elemetos if os.path.isdir(os.path.join(carpetaOrigen,f))]
+                
+                if archives:
+                    
+                    for archive in archives:
+                        origen = os.path.join(carpetaOrigen, archive)
+                        destino = os.path.join(carpetaDestino, archive)
+                        shutil.move(origen,destino)
+                        
+                        print(f"carpeta {archive} movida a {carpetaDestino}")
+                else:
+                    print("la carpeta esta vacia")
         except KeyboardInterrupt:
             move_backup(report, current_route, folder_name, folder_backup)
 
